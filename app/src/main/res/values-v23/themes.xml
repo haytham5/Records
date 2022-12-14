@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Records" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/blue_light</item>
+        <item name="android:navigationBarColor">@color/blue_light</item>
+    </style>
+</resources>

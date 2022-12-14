@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Records</string>
+    <string name="Search">Search</string>
+    <string name="favorite">Favorite</string>
+    <string name="listened">Listened</string>
+    <string name="Filter">Filter</string>
+    <string name="add_records">Add Records</string>
+</resources>
