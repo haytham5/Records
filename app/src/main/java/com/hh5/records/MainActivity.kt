@@ -1,5 +1,6 @@
 package com.hh5.records
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +71,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun RecordsApp(
     recordsViewModel: RecordsViewModel = viewModel(),
@@ -76,6 +79,11 @@ fun RecordsApp(
 ) {
 
     var dbHandler = DBHandler(LocalContext.current)
+
+//    dbHandler.clear()
+//
+//    //DEBUGGING TODO
+//    addAlbums(dbHandler)
 
     val recordsUiState by recordsViewModel.uiState.collectAsState()
     var clickedSearch by remember { mutableStateOf(false) }
@@ -88,11 +96,9 @@ fun RecordsApp(
     listened = recordsUiState.filterListened
 
 
-    var records by remember { mutableStateOf(mutableListOf<AlbumModel>()) }
+    var records = filter(dbHandler.readAlbums()!!, favorite, listened, recordsUiState)
 
-    filter(records, dbHandler.readAlbums()!!, favorite, listened, recordsUiState )
-
-    val albumPairs = records.chunked(2)
+//    var albumPairs = records.chunked(2)
 
     Scaffold(
         topBar = {
@@ -182,7 +188,7 @@ fun RecordsApp(
     ) {
         LazyColumn(modifier =
         Modifier.background(colors.background)) {
-            items(albumPairs) {
+            items(records.chunked(2)) {
                 if(it[0].equals(it[1])) {
                     AlbumItem(album1 = it[0], album2 = it[1], recordsViewModel = recordsViewModel, hide = true, dbHandler = dbHandler)
                 }
@@ -779,8 +785,8 @@ private fun AlbumCard(albumInput: AlbumModel, dbHandler: DBHandler, modifier: Mo
 
 
 @Composable
-private fun filter(filteredAlbums : MutableList<AlbumModel>, db : ArrayList<AlbumModel>, wantFavorite : Boolean, wantNew : Boolean, recordsUiState: RecordsUiState) {
-    filteredAlbums.clear()
+private fun filter(db : ArrayList<AlbumModel>, wantFavorite : Boolean, wantNew : Boolean, recordsUiState: RecordsUiState): SnapshotStateList<AlbumModel> {
+    var filteredAlbums = SnapshotStateList<AlbumModel>()
 
     val sortedDB = db.sortedBy { it.artist }
 
@@ -822,6 +828,8 @@ private fun filter(filteredAlbums : MutableList<AlbumModel>, db : ArrayList<Albu
         filteredAlbums.add(filteredAlbums.last())
     }
 
+    return filteredAlbums
+
 }
 
 @Preview
@@ -830,4 +838,23 @@ fun RecordsPreview() {
     RecordsTheme(darkTheme = true) {
         RecordsApp()
     }
+}
+
+fun addAlbums(dbHandler: DBHandler) {
+    dbHandler.addNewAlbum("AC/DC", "Back In Black", "Rock", "https:/ac/dc/lh3.googleusercontent.com/etTz20YiB4ccbsUO2yLrCY9wSS9GybYF5qJh-j5tu8MLTqP2GjgROiBt_4JUC5rjnnd_RiuWa3ndUAeO=w544-h544-l90-rj",false, false)
+
+    dbHandler.addNewAlbum("Nat Adderley", "The Cannonball Adderley Quintet In San Fransisco - KEEPNEWS COLLECTION", "Jazz", "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/1060/10600842_so.jpg",false, false)
+
+    dbHandler.addNewAlbum("Aesop Rock", "The Impossible Kid", "Hip-Hop", "https://lh3.googleusercontent.com/qMGKXlK6XS_eqoTu27UELrn3BJHakVOuGJEoh8fscMLsxDHlF6HJx-AQxDxaONqd0Fdw0eAjd2wQEXAF=w544-h544-l90-rj",true, true)
+
+    dbHandler.addNewAlbum("The All-American Rejects", "Move Along", "Pop", "https://lh3.googleusercontent.com/QouZWY6wFg4JmCcvieRtZUvIL8w2KxdheVnNTbef9zdFnrmXfORSA7ydpFqSeXmmsTi4rAAkgoRzE8o=w544-h544-s-l90-rj",true, false)
+
+    dbHandler.addNewAlbum("Damon Albarn", "Everyday Robots", "Indie","https://lh3.googleusercontent.com/PG62mLr3AMCu0Su0rxjB1LU5eQpyUAzzMXTXk05USV3hX1CHuBB1XjBfu2kf-IUcEssNWcH1USJ7hOg2zA=w544-h544-l90-rj",false, false)
+
+    dbHandler.addNewAlbum("Alt-J", "An Awesome Wave", "Indie", "https://www.gratefulweb.com/sites/default/files/images/articles/alt-j-album.jpg",true, true)
+
+    dbHandler.addNewAlbum("Alt-J", "This is All Yours", "Indie", "https://lh3.googleusercontent.com/eYeGAmRG1e68wyJlcYI9CZw72lrxterqwjCr9Nd87SmaPXpsvV1yM0ciNLdXtHpba1oi5zT36J6DeTE=w544-h544-l90-rj",true, true)
+
+    dbHandler.addNewAlbum("Aminé", "Limbo", "Hip-Hop", "https://lh3.googleusercontent.com/98ZtsBjBgUQI5jbCPjFiJztTbvWeqdLAxt4dmt13KsFAaM-wMD8N9CujkxFOGBaVXt7gnmIacUoTu5s=w544-h544-l90-rj",true, true)
+
 }
