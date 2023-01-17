@@ -1,9 +1,11 @@
 package com.hh5.records.ui
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.hh5.records.data.AlbumModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +22,8 @@ class RecordsViewModel() : ViewModel() {
     fun search() {
         _uiState.update { currentState ->
             currentState.copy(
-                search = searchText
+                search = searchText,
+                records = _uiState.value.records
             )
         }
     }
@@ -28,7 +31,8 @@ class RecordsViewModel() : ViewModel() {
     fun setListened() {
         _uiState.update { currentState ->
             currentState.copy(
-                filterListened = !_uiState.value.filterListened
+                filterListened = !_uiState.value.filterListened,
+                records = _uiState.value.records
             )
         }
     }
@@ -36,15 +40,16 @@ class RecordsViewModel() : ViewModel() {
     fun setFavorite() {
         _uiState.update { currentState ->
             currentState.copy(
-            filterFavorite = !_uiState.value.filterFavorite
+                filterFavorite = !_uiState.value.filterFavorite,
+                records = _uiState.value.records
             )
         }
     }
 
-    fun uiUpdate() {
+    fun updateRecords(records: List<AlbumModel>) {
         _uiState.update { currentState ->
             currentState.copy(
-                filterFavorite = _uiState.value.filterFavorite
+                records = records
             )
         }
     }
