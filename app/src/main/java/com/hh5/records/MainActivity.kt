@@ -1,6 +1,7 @@
 package com.hh5.records
 
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.setContent
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.hh5.records.data.DBHandler
 import com.hh5.records.ui.theme.RecordsTheme
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
@@ -80,11 +82,6 @@ fun RecordsApp(
 
     var dbHandler = DBHandler(LocalContext.current)
 
-//    dbHandler.clear()
-//
-//    //DEBUGGING TODO
-//    addAlbums(dbHandler)
-
     val recordsUiState by recordsViewModel.uiState.collectAsState()
     var clickedSearch by remember { mutableStateOf(false) }
     var clickedChips by remember { mutableStateOf(false) }
@@ -95,10 +92,7 @@ fun RecordsApp(
     favorite = recordsUiState.filterFavorite
     listened = recordsUiState.filterListened
 
-
-    var records = filter(dbHandler.readAlbums()!!, favorite, listened, recordsUiState)
-
-//    var albumPairs = records.chunked(2)
+    recordsViewModel.updateRecords(filter(dbHandler.readAlbums()!!, favorite, listened, recordsUiState))
 
     Scaffold(
         topBar = {
@@ -186,15 +180,14 @@ fun RecordsApp(
             }
         }
     ) {
-        LazyColumn(modifier =
-        Modifier.background(colors.background)) {
-            items(records.chunked(2)) {
-                if(it[0].equals(it[1])) {
-                    AlbumItem(album1 = it[0], album2 = it[1], recordsViewModel = recordsViewModel, hide = true, dbHandler = dbHandler)
+        LazyColumn(modifier = Modifier.background(colors.background)) {
+            items(recordsUiState.records.chunked(2)) {
+                var hide = false
+                if(it[0] == it[1]) {
+                    hide = true
                 }
-                else {
-                    AlbumItem(album1 = it[0], album2 = it[1], recordsViewModel = recordsViewModel, hide = false, dbHandler = dbHandler)
-                }
+
+                AlbumItem(album1 = it[0], album2 = it[1], recordsViewModel = recordsViewModel, hide = hide, dbHandler = dbHandler)
             }
         }
     }
@@ -598,7 +591,8 @@ private fun AlbumItem(album1: AlbumModel, album2: AlbumModel, hide: Boolean, rec
 @Composable
 private fun AlbumCard(albumInput: AlbumModel, dbHandler: DBHandler, modifier: Modifier = Modifier) {
     var albumInfo by remember { mutableStateOf(false) }
-    var albumModel by remember {mutableStateOf(albumInput)}
+    //var albumModel by remember {mutableStateOf(albumInput)}
+    val albumModel = albumInput
     var listenedValue by remember {(mutableStateOf(albumModel.listened == 1)) }
     var favoriteValue by remember {(mutableStateOf(albumModel.favorite == 1)) }
 
@@ -785,8 +779,8 @@ private fun AlbumCard(albumInput: AlbumModel, dbHandler: DBHandler, modifier: Mo
 
 
 @Composable
-private fun filter(db : ArrayList<AlbumModel>, wantFavorite : Boolean, wantNew : Boolean, recordsUiState: RecordsUiState): SnapshotStateList<AlbumModel> {
-    var filteredAlbums = SnapshotStateList<AlbumModel>()
+private fun filter(db : ArrayList<AlbumModel>, wantFavorite : Boolean, wantNew : Boolean, recordsUiState: RecordsUiState): List<AlbumModel> {
+    var filteredAlbums = mutableListOf<AlbumModel>()
 
     val sortedDB = db.sortedBy { it.artist }
 
