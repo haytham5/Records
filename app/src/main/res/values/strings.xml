@@ -5,4 +5,7 @@
     <string name="listened">Listened</string>
     <string name="Filter">Filter</string>
     <string name="add_records">Add Records</string>
+    <string name="collection">Collection</string>
+    <string name="stats">Stats</string>
+    <string name="randomizer">Randomizer</string>
 </resources>
