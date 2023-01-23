@@ -281,7 +281,7 @@ fun AlbumSelectedDisplay(albumInput: AlbumModel, dbHandler: DBHandler, modifier:
         modifier = Modifier
             .fillMaxSize()
             .padding(25.dp)
-        ) {
+    ) {
 
         Text(
             fontSize = 27.sp,
@@ -305,7 +305,8 @@ fun AlbumSelectedDisplay(albumInput: AlbumModel, dbHandler: DBHandler, modifier:
 
             Box(modifier = modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)) {
+                .aspectRatio(1f)
+            ) {
                 Image(
                     modifier = modifier
                         .padding(5.dp)
