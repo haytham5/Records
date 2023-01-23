@@ -1,7 +1,6 @@
 package com.hh5.records.ui
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -33,6 +32,14 @@ class RecordsViewModel() : ViewModel() {
             currentState.copy(
                 filterListened = !_uiState.value.filterListened,
                 records = _uiState.value.records
+            )
+        }
+    }
+
+    fun setShuffle(album: AlbumModel) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                shuffledAlbum = album
             )
         }
     }

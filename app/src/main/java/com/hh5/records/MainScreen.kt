@@ -13,7 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hh5.records.ui.CollectionScreen
-import com.hh5.records.ui.RandomizerScreen
+import com.hh5.records.ui.ShuffleScreen
 import com.hh5.records.ui.StartRecordsScreen
 import com.hh5.records.ui.StatsScreen
 
@@ -21,7 +21,7 @@ enum class RecordsScreen(@StringRes val title: Int) {
     Start(title = R.string.app_name),
     Collection(title = R.string.collection),
     Stats(title = R.string.stats),
-    Randomizer(title = R.string.randomizer)
+    Shuffle(title = R.string.shuffle)
 }
 
 
@@ -51,8 +51,8 @@ fun RecordsApp(
                         onStatsClicked = {
                             navController.navigate(RecordsScreen.Stats.name)
                         },
-                        onRandomizerClicked = {
-                            navController.navigate(RecordsScreen.Randomizer.name)
+                        onShuffleClicked = {
+                            navController.navigate(RecordsScreen.Shuffle.name)
                         }
                     )
                 }
@@ -67,8 +67,8 @@ fun RecordsApp(
                 StatsScreen()
             }
 
-            composable(route = RecordsScreen.Randomizer.name) {
-                RandomizerScreen()
+            composable(route = RecordsScreen.Shuffle.name) {
+                ShuffleScreen()
             }
 
         }
