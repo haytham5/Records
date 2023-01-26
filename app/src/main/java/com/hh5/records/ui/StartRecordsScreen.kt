@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DiscFull
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,8 +56,8 @@ fun StartRecordsScreen(
                 IconButton(onClick = { /*TODO Make Exit Application*/ },
                     modifier = modifier.weight(1f)) {
                     Icon(
-                        imageVector = Icons.Default.Shuffle,
-                        tint = MaterialTheme.colors.primary,
+                        imageVector = Icons.Default.Logout,
+                        tint = MaterialTheme.colors.onPrimary,
                         contentDescription = ""
                     )
                 }
