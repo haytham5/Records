@@ -1,20 +1,16 @@
 package com.hh5.records.ui
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.More
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +36,6 @@ import coil.request.ImageRequest
 import com.hh5.records.R
 import com.hh5.records.data.AlbumModel
 import com.hh5.records.data.DBHandler
-import com.hh5.records.ui.theme.*
 
 
 @Composable
@@ -137,6 +131,10 @@ fun StatsScreen(modifier: Modifier = Modifier) {
 
         else if(artistToggle) {
             ArtistChart(dbHandler = dbHandler, modifier)
+        }
+
+        else if(lisfavToggle) {
+            LisFavChart(dbHandler = dbHandler, modifier)
         }
     }
 
@@ -305,6 +303,7 @@ fun GenreChart(dbHandler: DBHandler, modifier: Modifier) {
             modifier = modifier
                 .background(color = MaterialTheme.colors.surface)
                 .padding(5.dp)
+                .fillMaxHeight(0.85f)
                 .align(Alignment.Center)
         ) {
             Box(
@@ -342,13 +341,19 @@ fun GenreChart(dbHandler: DBHandler, modifier: Modifier) {
 
             Spacer(modifier = modifier.padding(8.dp))
 
-            ChartDetails(
-                data = data,
-                colors = colors
-            )
-
-            Spacer(modifier = modifier.padding(8.dp))
-
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                data.values.forEachIndexed { index, value ->
+                    GenreItem(
+                        data = Pair(data.keys.elementAt(index), value),
+                        color = colors[index]
+                    )
+                }
+            }
         }
     }
 
@@ -361,27 +366,7 @@ fun findMainShade(a: Color): String {
 }
 
 @Composable
-fun ChartDetails(
-    data: Map<String, Int>,
-    colors: List<Color>
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(192.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        data.values.forEachIndexed { index, value ->
-            ChartItem(
-                data = Pair(data.keys.elementAt(index), value),
-                color = colors[index]
-            )
-        }
-    }
-}
-
-@Composable
-fun ChartItem(
+fun GenreItem(
     data: Pair<String, Int>,
     color: Color
 ) {
@@ -443,14 +428,13 @@ fun countAllGenres(readAlbums: ArrayList<AlbumModel>): MutableMap<String, Int> {
     return genreList
 }
 
-
-fun countAllArtists(readAlbums: ArrayList<AlbumModel>): MutableMap<String, Pair<String, Int>> {
+fun countAllArtists(readAlbums: List<AlbumModel>): MutableMap<String, Pair<String, Int>> {
     var artistList = mutableMapOf<String, Pair<String, Int>>()
 
 
     for(album in readAlbums) {
         if(!artistList.contains(album.artist)) {
-            artistList[album.artist] = Pair(album.cover, 0)
+            artistList[album.artist] = Pair(album.cover, 1)
         }
         else {
             artistList[album.artist] = Pair(artistList[album.artist]?.first, artistList[album.artist]?.second?.plus(1))
@@ -461,11 +445,31 @@ fun countAllArtists(readAlbums: ArrayList<AlbumModel>): MutableMap<String, Pair<
     return artistList
 }
 
+fun countLisFav(readAlbums: List<AlbumModel>): List<Int> {
+    var lisFavList = mutableListOf(readAlbums.size, 0, 0)
+
+    for(album in readAlbums) {
+        if(album.listened == 1 && album.favorite == 0) {
+            lisFavList[1] += 1
+        }
+
+        else if (album.listened == 1 && album.favorite == 1) {
+            lisFavList[2] +=1
+        }
+    }
+
+    return lisFavList.toList()
+}
 
 @Composable
 fun ArtistChart(dbHandler: DBHandler, modifier: Modifier) {
+    val artists = countAllArtists(dbHandler.readAlbums()!!.sortedBy { it.artist })
 
-    val data = countAllArtists(dbHandler.readAlbums()!!)
+    val data = artists.toList().sortedWith(compareByDescending<Pair<String, Pair<String, Int>>> { it.second.second }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.first }).toMap()
+
+    var top = 0;
+
+    val totalArtists = data.size
 
     Box(
         modifier = Modifier
@@ -489,18 +493,36 @@ fun ArtistChart(dbHandler: DBHandler, modifier: Modifier) {
                 .background(color = colors.surface)
                 .padding(5.dp)
                 .align(Alignment.Center)
-                //.verticalScroll(rememberScrollState())
+                .fillMaxHeight(0.85f)
+                .verticalScroll(rememberScrollState())
         ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                /*TODO Fix the values just getting layered on top of one another*/
-                data.values.forEachIndexed { index, value ->
-                    ArtistItem(
-                        data = Pair(data.keys.elementAt(index), value)
-                    )
+            data.values.forEachIndexed { index, value ->
+
+                /*TODO Consider making a signifier for how many albums each artist has*/
+                if(index == top) {
+                    top += 10
+                    Row(modifier = modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center) {
+                        Text(
+                            modifier = Modifier
+                                .padding(15.dp),
+                            text = "TOP $top" + if(top <= 10) " OF $totalArtists" else "",
+                            fontFamily = FontFamily(
+                                Font(R.font.righteous)
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = colors.onPrimary
+                        )
+                    }
+
+                    top = (top*2) - 10
                 }
 
+                ArtistItem(
+                    data = Pair(data.keys.elementAt(index), value)
+                )
             }
         }
     }
@@ -508,6 +530,9 @@ fun ArtistChart(dbHandler: DBHandler, modifier: Modifier) {
 
 @Composable
 fun ArtistItem(data: Pair<String, Pair<String, Int>>, modifier: Modifier = Modifier) {
+
+    Spacer(modifier = Modifier.padding(5.dp))
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -557,6 +582,56 @@ fun ArtistItem(data: Pair<String, Pair<String, Int>>, modifier: Modifier = Modif
             )
         }
 
+    }
+}
+
+@Composable
+fun LisFavChart(dbHandler: DBHandler, modifier: Modifier) {
+    val data = countLisFav(dbHandler.readAlbums()!!)
+
+    val totalSum = data[0].toFloat()
+    val floatValue = listOf(
+        data[2].toFloat()/totalSum,
+        data[1].toFloat()/totalSum,
+        (data[0] - (data[1] + data[2])).toFloat()/totalSum
+    )
+
+    val colors = listOf(colors.primary, colors.secondary, colors.secondaryVariant)
+
+    /*TODO Maybe make this a pie chart*/
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(25.dp)
+    ) {
+
+        Text(
+            fontSize = 27.sp,
+            fontFamily = FontFamily(
+                Font(R.font.righteous)
+            ),
+            text = "Your Faves Are...",
+            modifier = modifier.align(Alignment.TopCenter)
+        )
+
+        Spacer(modifier = modifier.padding(8.dp))
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier
+                .background(color = MaterialTheme.colors.surface)
+                .padding(5.dp)
+                .fillMaxHeight(0.85f)
+                .align(Alignment.Center)
+        ) {
+            Row(modifier = modifier.fillMaxWidth()) {
+
+               floatValue.forEachIndexed { index, _ ->
+                   Box(modifier = modifier.background(colors[index]).height(50.dp).weight(floatValue[index]))
+                }
+            }
+        }
     }
 }
 
