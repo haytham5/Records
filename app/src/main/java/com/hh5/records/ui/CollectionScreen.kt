@@ -63,8 +63,8 @@ fun CollectionScreen(
 ) {
     var dbHandler = DBHandler(LocalContext.current)
 
-    dbHandler.clear()
-    addAlbums(dbHandler)
+//    dbHandler.clear()
+//    addAlbums(dbHandler)
 
     val recordsUiState by recordsViewModel.uiState.collectAsState()
     var clickedSearch by remember { mutableStateOf(false) }

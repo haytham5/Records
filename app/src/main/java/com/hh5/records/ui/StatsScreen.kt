@@ -1,6 +1,5 @@
 package com.hh5.records.ui
 
-import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -87,19 +86,19 @@ fun StatsScreen(modifier: Modifier = Modifier) {
                             artistToggle = artistToggle,
                             lisfavToggle = lisfavToggle,
                             onGenreClicked = {
-                                genreToggle = !genreToggle
+                                if(!genreToggle) genreToggle = !genreToggle
 
                                 if(artistToggle) artistToggle = false
                                 if(lisfavToggle) lisfavToggle = false
                             },
                             onArtistsClicked = {
-                                artistToggle = !artistToggle
+                                if(!artistToggle) artistToggle = !artistToggle
 
                                 if(genreToggle) genreToggle = false
                                 if(lisfavToggle) lisfavToggle = false
                             },
                             onLisFavClicked = {
-                                lisfavToggle = !lisfavToggle
+                                if(!lisfavToggle) lisfavToggle = !lisfavToggle
 
                                 if(genreToggle) genreToggle = false
                                 if(artistToggle) artistToggle = false
@@ -258,25 +257,11 @@ fun GenreChart(dbHandler: DBHandler, modifier: Modifier) {
         colorInts.add(0xFF000000 + (Math.random() * 16777216).toInt())
     }
 
+    colorInts.sortByDescending { it }
+
     for(color in colorInts) {
         colors.add(Color(color))
     }
-
-    /*TODO Sort the red values first, then the Green Values, then the Blue values, in order of shade.
-    If red is highest then -> and if both have red highest who has the highest number*/
-//    val colorComparator =  Comparator<Color> { a, b ->
-//        if(a == b) return@Comparator 0
-//
-//        var aMS = findMainShade(a)
-//        var bMS = findMainShade(b)
-//
-//
-//        if(aMS == "red" && (bMS == "green" || bMS == "blue")) return@Comparator 1
-//        else if(aMS == "green" && bMS == "blue") return@Comparator 1
-//        else return@Comparator 0
-//
-//
-//    }
 
     var lastValue = 0f
 
@@ -348,7 +333,7 @@ fun GenreChart(dbHandler: DBHandler, modifier: Modifier) {
                     .verticalScroll(rememberScrollState())
             ) {
                 data.values.forEachIndexed { index, value ->
-                    GenreItem(
+                    PieChartItem(
                         data = Pair(data.keys.elementAt(index), value),
                         color = colors[index]
                     )
@@ -357,108 +342,6 @@ fun GenreChart(dbHandler: DBHandler, modifier: Modifier) {
         }
     }
 
-}
-
-fun findMainShade(a: Color): String {
-    return if((a.red > a.green && a.red > a.blue) || (a.red == a.green && a.red > a.blue)) "red"
-    else if ((a.green > a.red && a.green > a.blue) || (a.green == a.blue && a.green > a.red)) "green"
-    else "blue"
-}
-
-@Composable
-fun GenreItem(
-    data: Pair<String, Int>,
-    color: Color
-) {
-    Spacer(modifier = Modifier.padding(5.dp))
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(30.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Box(
-            modifier = Modifier
-                .background(
-                    color = color,
-                    shape = RoundedCornerShape(50.dp)
-                )
-                .fillMaxHeight()
-                .aspectRatio(1f)
-        )
-
-        Text(
-            modifier = Modifier
-                .padding(start = 15.dp)
-                .fillMaxHeight()
-                .align(Alignment.CenterVertically),
-            text = data.first + " / " + data.second.toString(),
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp,
-            color = colors.onPrimary
-        )
-    }
-
-}
-
-fun countAllGenres(readAlbums: ArrayList<AlbumModel>): MutableMap<String, Int> {
-    val genreList = mutableMapOf<String, Int>()
-
-    for(album in readAlbums) {
-        if(album.genre.contains("+")) {
-            var genre1 = album.genre.split(" + ")[0]
-            var genre2 = album.genre.split(" + ")[1]
-
-            if(!genreList.contains(genre1)) genreList[genre1] = 0
-            else if(genreList.contains(genre1)) genreList[genre1] = genreList[genre1]?.plus(1) ?: 0
-
-            if(!genreList.contains(genre2)) genreList[genre2] = 0
-            else if(genreList.contains(genre2)) genreList[genre2] = genreList[genre2]?.plus(1) ?: 0
-        }
-
-        else {
-            if(!genreList.contains(album.genre)) genreList[album.genre] = 0
-            if(genreList.contains(album.genre)) genreList[album.genre] = genreList[album.genre]?.plus(1) ?: 0
-
-        }
-    }
-
-    return genreList
-}
-
-fun countAllArtists(readAlbums: List<AlbumModel>): MutableMap<String, Pair<String, Int>> {
-    var artistList = mutableMapOf<String, Pair<String, Int>>()
-
-
-    for(album in readAlbums) {
-        if(!artistList.contains(album.artist)) {
-            artistList[album.artist] = Pair(album.cover, 1)
-        }
-        else {
-            artistList[album.artist] = Pair(artistList[album.artist]?.first, artistList[album.artist]?.second?.plus(1))
-                    as Pair<String, Int>
-        }
-    }
-
-    return artistList
-}
-
-fun countLisFav(readAlbums: List<AlbumModel>): List<Int> {
-    var lisFavList = mutableListOf(readAlbums.size, 0, 0)
-
-    for(album in readAlbums) {
-        if(album.listened == 1 && album.favorite == 0) {
-            lisFavList[1] += 1
-        }
-
-        else if (album.listened == 1 && album.favorite == 1) {
-            lisFavList[2] +=1
-        }
-    }
-
-    return lisFavList.toList()
 }
 
 @Composable
@@ -529,6 +412,156 @@ fun ArtistChart(dbHandler: DBHandler, modifier: Modifier) {
 }
 
 @Composable
+fun LisFavChart(dbHandler: DBHandler, modifier: Modifier) {
+    val data = countLisFav(dbHandler.readAlbums()!!)
+
+    val totalSum = data[0].toFloat()
+    val floatValue = listOf(
+        data[2].toFloat()/totalSum,
+        data[1].toFloat()/totalSum,
+        (data[0] - (data[1] + data[2])).toFloat()/totalSum
+    )
+
+    var mainColorDark = Color(colors.secondaryVariant.red*0.7f, colors.secondaryVariant.green*0.7f, colors.secondaryVariant.blue*0.7f, colors.secondaryVariant.alpha)
+    var mainColorLight = Color(colors.secondaryVariant.red*1.3f, colors.secondaryVariant.green*1.3f, colors.secondaryVariant.blue*1.3f, colors.secondaryVariant.alpha)
+
+    val colors = listOf(mainColorDark, colors.secondaryVariant, mainColorLight)
+
+    var lastValue = 0f
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(25.dp)
+    ) {
+
+        Text(
+            fontSize = 27.sp,
+            fontFamily = FontFamily(
+                Font(R.font.righteous)
+            ),
+            text = "Your Faves Are...",
+            modifier = modifier.align(Alignment.TopCenter)
+        )
+
+        Spacer(modifier = modifier.padding(8.dp))
+
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier
+                .background(color = MaterialTheme.colors.surface)
+                .padding(5.dp)
+                .fillMaxHeight(0.85f)
+                .align(Alignment.Center)
+        ) {
+
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(
+                    modifier = Modifier
+                        .size(120.dp * 2f)
+                        .fillMaxSize()
+                        .padding(30.dp)
+                        .align(Alignment.Center)
+                ) {
+                    floatValue.forEachIndexed { index, value ->
+                        drawArc(
+                            color = colors[index],
+                            lastValue,
+                            value*360,
+                            useCenter = false,
+                            style = Stroke(25.dp.toPx(), cap = StrokeCap.Butt)
+                        )
+                        lastValue += value*360
+                    }
+                }
+
+                Text(
+                    fontSize = 27.sp,
+                    fontFamily = FontFamily(
+                        Font(R.font.righteous)
+                    ),
+                    text = dbHandler.readAlbums()!!.size.toString(),
+                    modifier = modifier.align(Alignment.Center)
+                )
+            }
+
+            Spacer(modifier = modifier.padding(8.dp))
+
+            val chartData = mapOf(
+                Pair("New", (data[0] - (data[1] + data[2]))),
+                Pair("Listened", data[1]),
+                Pair("Favorites", data[2])
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                chartData.values.forEachIndexed { index, value ->
+                    PieChartItem(
+                        data = Pair(chartData.keys.elementAt(index), value),
+                        color = colors[index]
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PieChartItem(data: Pair<String, Int>, color: Color) {
+    Spacer(modifier = Modifier.padding(5.dp))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Box(
+            modifier = Modifier
+                .background(
+                    color = color,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .height(40.dp)
+                .aspectRatio(1f)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(start = 15.dp),
+                text = data.first,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = colors.onPrimary
+            )
+
+            Text(
+                modifier = Modifier
+                    .padding(start = 15.dp),
+                text = data.second.toString() + " Albums",
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                color = colors.onPrimary
+            )
+        }
+    }
+
+}
+
+@Composable
 fun ArtistItem(data: Pair<String, Pair<String, Int>>, modifier: Modifier = Modifier) {
 
     Spacer(modifier = Modifier.padding(5.dp))
@@ -585,54 +618,62 @@ fun ArtistItem(data: Pair<String, Pair<String, Int>>, modifier: Modifier = Modif
     }
 }
 
-@Composable
-fun LisFavChart(dbHandler: DBHandler, modifier: Modifier) {
-    val data = countLisFav(dbHandler.readAlbums()!!)
+fun countAllGenres(readAlbums: ArrayList<AlbumModel>): MutableMap<String, Int> {
+    val genreList = mutableMapOf<String, Int>()
 
-    val totalSum = data[0].toFloat()
-    val floatValue = listOf(
-        data[2].toFloat()/totalSum,
-        data[1].toFloat()/totalSum,
-        (data[0] - (data[1] + data[2])).toFloat()/totalSum
-    )
+    for(album in readAlbums) {
+        if(album.genre.contains("+")) {
+            var genre1 = album.genre.split(" + ")[0]
+            var genre2 = album.genre.split(" + ")[1]
 
-    val colors = listOf(colors.primary, colors.secondary, colors.secondaryVariant)
+            if(!genreList.contains(genre1)) genreList[genre1] = 1
+            else if(genreList.contains(genre1)) genreList[genre1] = genreList[genre1]?.plus(1) ?: 0
 
-    /*TODO Maybe make this a pie chart*/
+            if(!genreList.contains(genre2)) genreList[genre2] = 1
+            else if(genreList.contains(genre2)) genreList[genre2] = genreList[genre2]?.plus(1) ?: 0
+        }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(25.dp)
-    ) {
+        else {
+            if(!genreList.contains(album.genre)) genreList[album.genre] = 1
+            if(genreList.contains(album.genre)) genreList[album.genre] = genreList[album.genre]?.plus(1) ?: 0
 
-        Text(
-            fontSize = 27.sp,
-            fontFamily = FontFamily(
-                Font(R.font.righteous)
-            ),
-            text = "Your Faves Are...",
-            modifier = modifier.align(Alignment.TopCenter)
-        )
-
-        Spacer(modifier = modifier.padding(8.dp))
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
-                .background(color = MaterialTheme.colors.surface)
-                .padding(5.dp)
-                .fillMaxHeight(0.85f)
-                .align(Alignment.Center)
-        ) {
-            Row(modifier = modifier.fillMaxWidth()) {
-
-               floatValue.forEachIndexed { index, _ ->
-                   Box(modifier = modifier.background(colors[index]).height(50.dp).weight(floatValue[index]))
-                }
-            }
         }
     }
+
+    return genreList
+}
+
+fun countAllArtists(readAlbums: List<AlbumModel>): MutableMap<String, Pair<String, Int>> {
+    var artistList = mutableMapOf<String, Pair<String, Int>>()
+
+
+    for(album in readAlbums) {
+        if(!artistList.contains(album.artist)) {
+            artistList[album.artist] = Pair(album.cover, 1)
+        }
+        else {
+            artistList[album.artist] = Pair(artistList[album.artist]?.first, artistList[album.artist]?.second?.plus(1))
+                    as Pair<String, Int>
+        }
+    }
+
+    return artistList
+}
+
+fun countLisFav(readAlbums: List<AlbumModel>): List<Int> {
+    var lisFavList = mutableListOf(readAlbums.size, 0, 0)
+
+    for(album in readAlbums) {
+        if(album.listened == 1 && album.favorite == 0) {
+            lisFavList[1] += 1
+        }
+
+        else if (album.listened == 1 && album.favorite == 1) {
+            lisFavList[2] +=1
+        }
+    }
+
+    return lisFavList.toList()
 }
 
 @Preview
