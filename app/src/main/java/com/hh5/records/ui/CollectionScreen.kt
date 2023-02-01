@@ -53,6 +53,8 @@ import coil.request.ImageRequest
 import com.hh5.records.R
 import com.hh5.records.data.AlbumModel
 import android.util.Log
+import androidx.compose.ui.focus.FocusDirection.Companion.In
+import com.hh5.records.data.addAlbums
 
 @Composable
 fun CollectionScreen(
@@ -60,6 +62,9 @@ fun CollectionScreen(
     modifier: Modifier = Modifier,
 ) {
     var dbHandler = DBHandler(LocalContext.current)
+
+//    dbHandler.clear()
+//    addAlbums(dbHandler)
 
     val recordsUiState by recordsViewModel.uiState.collectAsState()
     var clickedSearch by remember { mutableStateOf(false) }
